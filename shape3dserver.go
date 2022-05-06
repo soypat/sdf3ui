@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"sync"
@@ -9,6 +10,7 @@ import (
 	"vecty-templater-project/model"
 
 	"github.com/soypat/sdf/render"
+	"golang.org/x/time/rate"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 )
@@ -40,14 +42,15 @@ func (s *shape3DServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		c.Close(websocket.StatusPolicyViolation, "client must speak the "+model.WSSubprotocol+" subprotocol")
 		return
 	}
+	l := rate.NewLimiter(rate.Every(500*time.Millisecond), 2)
 	log.Println("websocket connection established")
 	for {
-		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second))
-		err = s.sendShape(ctx, c)
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		err = s.sendStatus(ctx, c, l)
+		cancel()
 		if websocket.CloseStatus(err) == websocket.StatusNormalClosure {
 			return
 		}
-		cancel()
 		if err != nil {
 			log.Printf("failed to echo with %v: %v\n", r.RemoteAddr, err)
 			return
@@ -55,15 +58,15 @@ func (s *shape3DServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// sendShape sends 3d model data over websocket connection. It fails to send
+// sendStatus sends 3d model data over websocket connection. It fails to send
 // if shape becomes stale.
-func (t *shape3DServer) sendShape(ctx context.Context, c *websocket.Conn) error {
+func (t *shape3DServer) sendStatus(ctx context.Context, c *websocket.Conn, l *rate.Limiter) error {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if t.shape.Ctx == nil {
 		t.shape.Ctx = ctx // temp workaround
 	}
-	ctx, cancel := context.WithTimeout(ctx, time.Second*200)
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	go func() {
 		// This goroutine cancels sendShape if shape becomes stale.
@@ -73,7 +76,14 @@ func (t *shape3DServer) sendShape(ctx context.Context, c *websocket.Conn) error 
 		}
 		cancel()
 	}()
-	return wsjson.Write(ctx, c, t.shape)
+	status := model.ServerStatus{
+		ShapeSeq: t.shape.Seq,
+	}
+	err := l.Wait(ctx)
+	if err != nil {
+		return err
+	}
+	return wsjson.Write(ctx, c, status)
 }
 
 // SetShape sets the render data and handles Shape3D context
@@ -92,4 +102,19 @@ func (t *shape3DServer) SetShape(data []render.Triangle3) {
 		Triangles: data,
 		Seq:       seq,
 	}
+}
+
+func (t *shape3DServer) serveShapeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(200)
+	log.Println("serveShapeHTTP request")
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	log.Println("encoding shape")
+	err := json.NewEncoder(w).Encode(t.shape)
+	if err != nil {
+		log.Println("error encoding shape", err)
+		return
+	}
+	log.Println("shape encode success")
 }

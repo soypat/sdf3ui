@@ -43,6 +43,7 @@ func main() {
 	http.Handle("/", wsm)
 	http.Handle("/"+model.WSSubprotocol, &rendererServer.server)
 	http.Handle("/assets/", http.FileServer(http.FS(assetsFS)))
-	log.Printf("listening on http://[::]%v", model.HTTPServerAddr)
-	log.Fatal(http.ListenAndServe(model.HTTPServerAddr, nil))
+	http.HandleFunc(model.ShapeEndpoint, rendererServer.server.serveShapeHTTP)
+	log.Printf("listening on %v", model.HTTPBaseURL)
+	log.Fatal(http.ListenAndServe(model.HTTPAddr, newBaseMiddleware(http.DefaultServeMux)))
 }

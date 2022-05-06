@@ -1,8 +1,9 @@
 package main
 
 import (
-	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"vecty-templater-project/app/store"
@@ -14,8 +15,6 @@ import (
 	"github.com/hexops/vecty"
 	"github.com/soypat/gwasm"
 	"github.com/soypat/three"
-	"nhooyr.io/websocket"
-	"nhooyr.io/websocket/wsjson"
 )
 
 func main() {
@@ -28,10 +27,12 @@ func main() {
 	if err != nil {
 		Message = "three.js not found!"
 	}
+	updateShape()
+	go updateShape()
 	// OnAction must be registered before any storage manipulation.
 	actions.Register(store.OnAction)
 
-	shapeListener()
+	addShapeListener()
 
 	body := &views.Body{
 		Ctx:  store.Ctx,
@@ -45,47 +46,57 @@ func main() {
 	vecty.RenderBody(body)
 }
 
-// shapeListener
-func shapeListener() {
+// addShapeListener
+func addShapeListener() {
 	const key = "shape3"
-	defer initShapeWS()
+	// defer initShapeWS()
 	store.Listeners.Add(nil, func(action interface{}) {
 		if _, ok := action.(*actions.GetShape); !ok {
 			// Only render new shape on RefreshShape action.
 			return
 		}
-		var shape model.Shape3D
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		err := wsjson.Read(ctx, wsConn, &shape)
-		if err != nil {
-			fmt.Println("reading server reply from websocket:", err)
-			go initShapeWS()
-			return
-		}
-		store.SetShape(shape)
-		store.ServerReply = fmt.Sprintf("Shape sequence %d", shape.Seq)
-		actions.Dispatch(&actions.Refresh{})
+		updateShape()
 	})
 }
 
-var wsConn *websocket.Conn
-
-func initShapeWS() {
-	if wsConn != nil {
-		wsConn.Close(websocket.StatusAbnormalClosure, "client wanted to reinitialize")
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
-	defer cancel()
-
-	c, _, err := websocket.Dial(ctx, "ws://localhost"+model.HTTPServerAddr+"/"+model.WSSubprotocol, &websocket.DialOptions{
-		Subprotocols: []string{model.WSSubprotocol},
-	})
-
+func updateShape() {
+	resp, err := http.Get(model.ShapeEndpoint)
 	if err != nil {
-		fmt.Println("websocket initialization failed:", err.Error())
+		fmt.Println("getting new shape:", err)
 		return
 	}
-	c.SetReadLimit(model.MaxRenderSize)
-	wsConn = c
+	var shape model.Shape3D
+	err = json.NewDecoder(resp.Body).Decode(shape)
+	if err != nil {
+		fmt.Println("decoding new shape:", err)
+		return
+	}
+
+	fmt.Println("updateShape success, got shape of size ", len(shape.Triangles))
+	store.SetShape(shape)
+	store.ServerReply = fmt.Sprintf("Shape sequence %d", shape.Seq)
+	actions.Dispatch(&actions.Refresh{})
 }
+
+// var wsConn *websocket.Conn
+
+// func initShapeWS() {
+// 	fmt.Println("init socket")
+// 	if wsConn != nil {
+// 		wsConn.Close(websocket.StatusAbnormalClosure, "client wanted to reinitialize")
+// 	}
+// 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+// 	defer cancel()
+
+// 	c, _, err := websocket.Dial(ctx, "ws://localhost"+model.HTTPAddr+"/"+model.WSSubprotocol, &websocket.DialOptions{
+// 		Subprotocols: []string{model.WSSubprotocol},
+// 	})
+
+// 	if err != nil {
+// 		fmt.Println("websocket initialization failed:", err.Error())
+// 		return
+// 	}
+// 	c.SetReadLimit(model.MaxRenderSize)
+// 	wsConn = c
+// 	fmt.Println("initialized websocket succesfully")
+// }

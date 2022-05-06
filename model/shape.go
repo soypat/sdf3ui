@@ -7,9 +7,12 @@ import (
 )
 
 const (
-	HTTPServerAddr = ":8080"
+	HTTPHost    = "http://[::]"
+	HTTPAddr    = ":8080"
+	HTTPBaseURL = HTTPHost + HTTPAddr
 	// Websocket sub protocol.
 	WSSubprotocol = "sdf3ui"
+	ShapeEndpoint = "/" + WSSubprotocol + "/getShape"
 	megabyte      = 1000 * 1000
 	MaxRenderSize = 30 * megabyte
 )
@@ -24,4 +27,15 @@ type Shape3D struct {
 	Triangles []render.Triangle3
 	// Sequence number of shape.
 	Seq uint
+}
+
+type ShapeStatus string
+
+const (
+	ShapeStale ShapeStatus = "shape is stale"
+	ShapeOK    ShapeStatus = "shape is up to date"
+)
+
+type ServerStatus struct {
+	ShapeSeq uint
 }
