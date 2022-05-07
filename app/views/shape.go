@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"syscall/js"
+	"vecty-templater-project/app/store"
 	"vecty-templater-project/model"
 
 	"github.com/hexops/vecty"
@@ -63,12 +64,9 @@ func (v *shape3d) init(wgl three.WebGLRenderer) {
 	// Camera.
 	// ISO view looking at origin.
 	v.camera = three.NewPerspectiveCamera(70, width/height, v.near, v.far/200)
-	v.camera.SetPosition(three.NewVector3(v.far/2, v.far/2, v.far/2))
-	v.camera.LookAt(three.NewVector3(0, 0, 0))
 
 	// Controls.
 	v.controls = three.NewTrackballControls(v.camera, wgl.DomElement())
-	v.controls.SetMaxDistance(v.far * 1.4)
 
 	v.renderShape(wgl)
 	wgl.Render(v.scene, v.camera)
@@ -89,11 +87,11 @@ func (v *shape3d) SetShape(shape model.Shape3D) {
 func (v *shape3d) renderShape(wgl three.WebGLRenderer) {
 	if v.shape.Seq == uint(v.renderedSeq) {
 		// Already rendered.
-		fmt.Println("skipping render sequence", v.shape.Seq)
+		// fmt.Println("skipping render sequence", v.shape.Seq)
 		return
 	}
 	if len(v.shape.Triangles) == 0 {
-		fmt.Println("skipping render due to empty triangles")
+		// fmt.Println("skipping render due to empty triangles")
 		return
 	}
 	defer v.setCamera()
@@ -104,7 +102,7 @@ func (v *shape3d) renderShape(wgl three.WebGLRenderer) {
 	// mesh.Add(points)
 	if v.shapeMesh.Truthy() {
 		v.scene.Remove(v.shapeMesh)
-		v.shapeMesh.Call("dispose") // does this free all memory?
+		// v.shapeMesh.Call("dispose") // does this free all memory?
 	}
 
 	v.shapeMesh = mesh
@@ -113,6 +111,7 @@ func (v *shape3d) renderShape(wgl three.WebGLRenderer) {
 }
 
 func (v *shape3d) setCamera() {
+	defer store.TimeIt("shape3d.setCamera")()
 	size := bbSize(v.bb)
 	sizeNorm := r3.Norm(size)
 	center := bbCenter(v.bb)
@@ -148,6 +147,7 @@ func bbCenter(bb r3.Box) r3.Vec {
 }
 
 func makeShapeMesh(t []render.Triangle3) (three.Mesh, r3.Box) {
+	defer store.TimeIt("shape3D.makeShapeMesh")()
 	Nfaces := len(t)
 	const faceLen = 3 * 3
 	vertices := make([]float32, Nfaces*faceLen)

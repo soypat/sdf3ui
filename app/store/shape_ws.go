@@ -68,6 +68,7 @@ func WebsocketShapeListen() {
 
 func ForceUpdateShape() {
 	go func() {
+		defer TimeIt("ForceUpdateShape")()
 		resp, err := http.Get(model.ShapeEndpoint)
 		if err != nil {
 			fmt.Println("error during GET updating shape", err)
