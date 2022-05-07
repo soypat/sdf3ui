@@ -15,7 +15,7 @@ func main() {
 		Thread:      "M16x2",
 		Style:       obj3.CylinderHex,
 		Tolerance:   0.1,
-		TotalLength: 40.,
+		TotalLength: 101.,
 		ShankLength: 10.0,
 	})
 	err := uirender.EncodeRenderer(os.Stdout, render.NewOctreeRenderer(b, quality))

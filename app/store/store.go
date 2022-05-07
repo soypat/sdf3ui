@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 	"vecty-templater-project/app/store/actions"
 	"vecty-templater-project/model"
 
@@ -68,4 +69,14 @@ func OnAction(action interface{}) {
 	}
 	fmt.Printf("action %T", action)
 	Listeners.Fire(action)
+}
+
+func SaveRemoteSTL(filename string) {
+	go func() {
+		resp, err := http.Get(model.HTTPBaseURL + model.SaveSTLEndpoint + "?name=" + filename)
+		if err != nil || resp.StatusCode != 200 {
+			msg, _ := io.ReadAll(resp.Body)
+			fmt.Println("Saving remote STL error ", resp.StatusCode, string(msg), err)
+		}
+	}()
 }

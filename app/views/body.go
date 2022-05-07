@@ -13,12 +13,17 @@ type Body struct {
 	vecty.Core
 	Ctx  actions.Context `vecty:"prop"`
 	Info string          `vecty:"prop"`
+
+	stlNameInput *vecty.HTML
 }
 
 func (b *Body) Render() vecty.ComponentOrHTML {
 	var mainContent vecty.MarkupOrChild
 	switch b.Ctx.Page {
 	case actions.PageLanding:
+		b.stlNameInput = elem.Input(
+			vecty.Markup(vecty.Attribute("placeholder", "stl filename")),
+		)
 		mainContent = elem.Div(
 			elem.Strong(vecty.Text(b.Info)),
 			elem.Div(
@@ -26,9 +31,10 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 					vecty.Markup(event.Click(b.newItem)),
 					vecty.Text("Refresh Shape3D"),
 				),
+				b.stlNameInput,
 				elem.Button(
 					vecty.Markup(event.Click(b.downloadSTL)),
-					vecty.Text("Download Shape3D STL"),
+					vecty.Text("Save STL in working directory"),
 				),
 			),
 			&Landing{
@@ -57,5 +63,10 @@ func (b *Body) newItem(*vecty.Event) {
 }
 
 func (b *Body) downloadSTL(*vecty.Event) {
+	filename := b.stlNameInput.Node().Get("value").String()
+	if filename == "" {
+		filename = "sdf3ui_output.stl"
+	}
+	store.SaveRemoteSTL(filename)
 	actions.Dispatch(&actions.DownloadShapeSTL{Shape: store.GetShape()})
 }

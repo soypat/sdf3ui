@@ -13,10 +13,11 @@ const (
 	HTTPAddr    = ":8080"
 	HTTPBaseURL = HTTPHost + HTTPAddr
 	// Websocket sub protocol.
-	WSSubprotocol = "sdf3ui"
-	ShapeEndpoint = "/" + WSSubprotocol + "/getShape"
-	megabyte      = 1000 * 1000
-	MaxRenderSize = 30 * megabyte
+	WSSubprotocol   = "sdf3ui"
+	ShapeEndpoint   = "/" + WSSubprotocol + "/getShape"
+	SaveSTLEndpoint = "/createSTL"
+	megabyte        = 1000 * 1000
+	MaxRenderSize   = 30 * megabyte
 )
 
 // Shape3D contains 3D shape information.
@@ -52,7 +53,8 @@ const (
 )
 
 type ServerStatus struct {
-	ShapeSeq uint
+	ShapeSeq  uint
+	ShapeName string
 }
 
 func (s *Shape3D) Encode(w io.Writer) error {

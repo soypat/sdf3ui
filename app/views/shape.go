@@ -25,7 +25,6 @@ type shape3d struct {
 	camera      three.PerspectiveCamera
 	scene       three.Scene
 	controls    three.TrackballControls
-	near, far   float64
 	renderedSeq int
 }
 
@@ -49,21 +48,19 @@ func (v *shape3d) init(wgl three.WebGLRenderer) {
 	wgl.SetSize(width, height, true)
 	fmt.Println("webgl initialized with widthxheight", width, height)
 	v.scene = three.NewScene()
-	v.near = 0.2
-	v.far = 100
-	// Lights.
-	dlight := three.NewDirectionalLight(three.NewColor("white"), 1) // lights, without lights everything will be dark!
+	// Lights.  without lights everything will be dark!
+	dlight := three.NewDirectionalLight(three.NewColor("white"), 1)
 	dlight.SetPosition(three.NewVector3(1000, 1000, 0))
 	amblight := three.NewAmbientLight(three.NewColor("white"), 0.2)
-	dlight2 := three.NewDirectionalLight(three.NewColor("lightblue"), .5) // lights, without lights everything will be dark!
+	dlight2 := three.NewDirectionalLight(three.NewColor("lightblue"), .5)
 	dlight2.SetPosition(three.NewVector3(0, -1000, 1000))
 	v.scene.Add(dlight)
 	v.scene.Add(amblight)
 	v.scene.Add(dlight2)
-	// v.scene.Add(three.NewFog(*three.NewColorHex(0x050505), v.far/2, v.far))
+
 	// Camera.
 	// ISO view looking at origin.
-	v.camera = three.NewPerspectiveCamera(70, width/height, v.near, v.far/200)
+	v.camera = three.NewPerspectiveCamera(70, width/height, 0.1, 2000)
 
 	// Controls.
 	v.controls = three.NewTrackballControls(v.camera, wgl.DomElement())

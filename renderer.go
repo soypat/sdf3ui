@@ -82,6 +82,6 @@ func (r *rendererHandler) renderFile(ctx context.Context, filename string) error
 	if err != nil {
 		return err
 	}
-	r.server.SetShape(triangles)
+	r.server.SetShape(filename, triangles)
 	return nil
 }

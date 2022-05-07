@@ -18,6 +18,7 @@ import (
 type shape3DServer struct {
 	mu    sync.Mutex
 	shape model.Shape3D
+	stat  model.ServerStatus
 	// staleFunc is a function that is called when shape
 	// becomes stale. It cancels the Shape3D's context.
 	staleFunc   func()
@@ -83,19 +84,16 @@ func (t *shape3DServer) sendStatus(ctx context.Context, c *websocket.Conn, l *ra
 		}
 		cancel()
 	}()
-	status := model.ServerStatus{
-		ShapeSeq: t.shape.Seq,
-	}
 	err := l.Wait(ctx)
 	if err != nil {
 		return err
 	}
-	return wsjson.Write(ctx, c, status)
+	return wsjson.Write(ctx, c, t.stat)
 }
 
 // SetShape sets the render data and handles Shape3D context
 // and sequence number.
-func (t *shape3DServer) SetShape(data []render.Triangle3) {
+func (t *shape3DServer) SetShape(name string, data []render.Triangle3) {
 	if t.staleFunc != nil {
 		t.staleFunc()
 	}
@@ -104,6 +102,10 @@ func (t *shape3DServer) SetShape(data []render.Triangle3) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.staleFunc = cancel
 	seq := t.shape.Seq + 1
+	t.stat = model.ServerStatus{
+		ShapeSeq:  seq,
+		ShapeName: name,
+	}
 	t.shape = model.Shape3D{
 		Triangles: data,
 		Seq:       seq,
@@ -118,14 +120,10 @@ busysend:
 			break busysend
 		}
 	}
-	fp, err := os.Create("output.stl")
-	if err == nil {
-		render.WriteSTL(fp, t.shape.Triangles)
-	}
 }
 
 func (t *shape3DServer) serveShapeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
+	w.Header().Add("Content-Type", "application/octet-stream")
 	w.WriteHeader(200)
 	log.Println("serveShapeHTTP request")
 	t.mu.Lock()
@@ -137,4 +135,21 @@ func (t *shape3DServer) serveShapeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println("shape encode success")
+}
+
+func (t *shape3DServer) createSTLHandler(w http.ResponseWriter, req *http.Request) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	filename := req.URL.Query().Get("name")
+	fp, err := os.Create(filename)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	err = render.WriteSTL(fp, t.shape.Triangles)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	w.WriteHeader(200)
 }
