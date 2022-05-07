@@ -54,6 +54,8 @@ github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZN
 github.com/soypat/gwasm v0.0.3/go.mod h1:E5X6KR00phzzQy857HYgcPpD0rOsc8FV28jf4W8V19k=
 github.com/soypat/gwasm v0.0.10 h1:Vd82HgAauMLG0f7WZTEmkTqyePgKzspV+lzz3GbDZpw=
 github.com/soypat/gwasm v0.0.10/go.mod h1:E5X6KR00phzzQy857HYgcPpD0rOsc8FV28jf4W8V19k=
+github.com/soypat/rebed v0.2.3 h1:J/rJoxQ7B9eLhXmGzSy81+cjrfknsnYQSFnoIwxTGWs=
+github.com/soypat/rebed v0.2.3/go.mod h1:tP1Sb7HyBNHG23LZGltBh1FL0pJOdNO1bT0EBqJOVyA=
 github.com/soypat/sdf v0.0.0-20220501183515-feb9cc57016f h1:OcGp2xNH2jUwDQWGguOROkERK8PQhz0mG8yNnvByQ4I=
 github.com/soypat/sdf v0.0.0-20220501183515-feb9cc57016f/go.mod h1:LBKSgjy/HPyFjQDV3hdSDa6j72jPAeUa6YbS2wjaMC0=
 github.com/soypat/sdf v0.0.0-20220507034430-c26521433a8b h1:D8ZhwUhERHFI/pNVNBus/NNv4BoUS6d/YLp2QLMAvN0=

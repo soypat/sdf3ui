@@ -6,12 +6,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
+	"path/filepath"
 )
 
 const dirPerm = 0777
 
 func main() {
-	for _, dir := range []string{"js"} {
+	for _, dir := range []string{"js", "wasm"} {
 		err := os.MkdirAll("assets/"+dir, dirPerm)
 		if err != nil && !os.IsExist(err) {
 			log.Fatal("creating directory: ", err)
@@ -20,6 +22,11 @@ func main() {
 
 	for _, w := range work {
 		w.download()
+	}
+	const mainWasmPath = "assets/wasm/main.wasm"
+	err := generateWASM(mainWasmPath)
+	if err != nil {
+		log.Fatal(err)
 	}
 	log.Println("all files downloaded succesfully or already downloaded.")
 	log.Println("program finished succesfully")
@@ -73,5 +80,29 @@ func downloadFile(URL, fileName string) error {
 		return err
 	}
 
+	return nil
+}
+
+func generateWASM(dst string) error {
+	if _, err := os.Stat(dst); err == nil {
+		log.Println(dst + " already generated. finishing program")
+		return nil
+	}
+	log.Println("generating WASM")
+	// Build wasm file
+	cmd := exec.Command("go", "build", "-o=main.wasm", ".")
+	cmd.Dir = "app"
+	cmd.Env = append(os.Environ(), "GOOS=js", "GOARCH=wasm")
+	out, err := cmd.CombinedOutput()
+	if len(out) > 0 {
+		log.Print(string(out))
+	}
+	if err != nil {
+		return err
+	}
+	err = os.Rename(filepath.Join(cmd.Dir, "main.wasm"), dst)
+	if err != nil {
+		return err
+	}
 	return nil
 }

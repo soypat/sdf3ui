@@ -15,5 +15,8 @@ require (
 
 require (
 	github.com/klauspost/compress v1.10.3 // indirect
+	github.com/soypat/rebed v0.2.3 // indirect
 	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
 )
+
+replace github.com/soypat/gwasm => ../gwasm
