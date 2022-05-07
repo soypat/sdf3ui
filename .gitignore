@@ -14,7 +14,7 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-assets/js
+# assets/js
 !assets/gen_assets.go
 
 *.stl
