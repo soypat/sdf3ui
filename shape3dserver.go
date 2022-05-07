@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 	"vecty-templater-project/model"
@@ -117,7 +118,10 @@ busysend:
 			break busysend
 		}
 	}
-
+	fp, err := os.Create("output.stl")
+	if err == nil {
+		render.WriteSTL(fp, t.shape.Triangles)
+	}
 }
 
 func (t *shape3DServer) serveShapeHTTP(w http.ResponseWriter, r *http.Request) {

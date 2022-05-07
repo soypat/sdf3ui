@@ -3,8 +3,12 @@ package store
 import (
 	"context"
 	"fmt"
+	"io"
 	"vecty-templater-project/app/store/actions"
 	"vecty-templater-project/model"
+
+	"github.com/soypat/gwasm"
+	"github.com/soypat/sdf/render"
 )
 
 var (
@@ -32,6 +36,7 @@ func SetShape(s model.Shape3D) {
 func OnAction(action interface{}) {
 	switch a := action.(type) {
 	case *actions.GetShape:
+		ForceUpdateShape()
 		// fire shape updater listener
 	case *actions.PageSelect:
 		oldCtx := Ctx
@@ -40,6 +45,20 @@ func OnAction(action interface{}) {
 			Referrer: &oldCtx,
 		}
 
+	case *actions.DownloadShapeSTL:
+		r, w := io.Pipe()
+		defer r.Close()
+		go func() {
+			defer w.Close()
+			err := render.WriteSTL(w, a.Shape.Triangles)
+			if err != nil {
+				fmt.Println("writing STL to stream:", err)
+			}
+		}()
+		err := gwasm.DownloadStream("shape.stl", "", r)
+		if err != nil {
+			fmt.Println("downloading STL:", err)
+		}
 	case *actions.Back:
 		Ctx = *Ctx.Referrer
 	case *actions.Refresh:

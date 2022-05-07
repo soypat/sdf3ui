@@ -10,13 +10,15 @@ import (
 )
 
 func main() {
+	const quality = 200
 	b, _ := obj3.Bolt(obj3.BoltParms{
-		Thread:      "npt_1/2",
+		Thread:      "M16x2",
 		Style:       obj3.CylinderHex,
-		TotalLength: 45,
-		ShankLength: 12,
+		Tolerance:   0.1,
+		TotalLength: 60.0,
+		ShankLength: 10.0,
 	})
-	err := uirender.EncodeRenderer(os.Stdout, render.NewOctreeRenderer(b, 200))
+	err := uirender.EncodeRenderer(os.Stdout, render.NewOctreeRenderer(b, quality))
 	if err != nil {
 		log.Fatal(err)
 	}

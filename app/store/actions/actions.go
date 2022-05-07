@@ -1,5 +1,7 @@
 package actions
 
+import "vecty-templater-project/model"
+
 // Context contains all information to completely define a page layout.
 // It also has information on last page visited to enable the use of a "back" button.
 // It is not an "action" item strictly speaking.
@@ -28,6 +30,10 @@ type PageSelect struct {
 
 // GetShape action.
 type GetShape struct{}
+
+type DownloadShapeSTL struct {
+	Shape model.Shape3D
+}
 
 // Back button pressed. Navigate to previous page.
 type Back struct{}

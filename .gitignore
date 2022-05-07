@@ -16,3 +16,6 @@
 
 assets/js
 !assets/gen_assets.go
+
+*.stl
+.vscode

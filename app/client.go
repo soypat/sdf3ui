@@ -16,7 +16,7 @@ import (
 
 func main() {
 	Message := "Welcome!"
-	gwasm.AddScript("https://threejs.org/build/three.js", "THREE", time.Second)
+	gwasm.AddScript("https://threejs.org/build/three.js", "THREE", 3*time.Second)
 
 	fmt.Println("if assets/js/trackball_controls.js fails to get please run `go generate` in sdf3ui base directory to generate assets")
 	gwasm.AddScript("assets/js/trackball_controls.js", "TrackballControls", time.Second)
@@ -27,9 +27,8 @@ func main() {
 	go store.WebsocketShapeListen()
 	// OnAction must be registered before any storage manipulation.
 	actions.Register(store.OnAction)
-
-	addShapeListener()
-
+	// Get Latest shape.
+	store.ForceUpdateShape()
 	body := &views.Body{
 		Ctx:  store.Ctx,
 		Info: Message,
@@ -40,17 +39,4 @@ func main() {
 		vecty.Rerender(body)
 	})
 	vecty.RenderBody(body)
-}
-
-// addShapeListener
-func addShapeListener() {
-	const key = "shape3"
-	// defer initShapeWS()
-	store.Listeners.Add(nil, func(action interface{}) {
-		if _, ok := action.(*actions.GetShape); !ok {
-			// Only render new shape on RefreshShape action.
-			return
-		}
-		store.ForceUpdateShape()
-	})
 }

@@ -21,10 +21,16 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 	case actions.PageLanding:
 		mainContent = elem.Div(
 			elem.Strong(vecty.Text(b.Info)),
-			elem.Div(elem.Button(
-				vecty.Markup(event.Click(b.newItem)),
-				vecty.Text("Refresh Shape3D"),
-			)),
+			elem.Div(
+				elem.Button(
+					vecty.Markup(event.Click(b.newItem)),
+					vecty.Text("Refresh Shape3D"),
+				),
+				elem.Button(
+					vecty.Markup(event.Click(b.downloadSTL)),
+					vecty.Text("Download Shape3D STL"),
+				),
+			),
 			&Landing{
 				Shape: store.GetShape(),
 			},
@@ -48,4 +54,8 @@ func (b *Body) backButton(*vecty.Event) {
 
 func (b *Body) newItem(*vecty.Event) {
 	actions.Dispatch(&actions.GetShape{})
+}
+
+func (b *Body) downloadSTL(*vecty.Event) {
+	actions.Dispatch(&actions.DownloadShapeSTL{Shape: store.GetShape()})
 }
