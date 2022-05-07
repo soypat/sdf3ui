@@ -21,17 +21,11 @@ type shape3DServer struct {
 	// becomes stale. It cancels the Shape3D's context.
 	staleFunc   func()
 	shapeNotify chan struct{}
-	busy        bool
 }
 
 // ServeHTTP is a basic websocket implementation for reading/writing a TODO list
 // from a websocket.
 func (s *shape3DServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if s.busy { // race condition, but oh well. move fast break things.
-		log.Println("attempted to register a second websocket. Only one browser window supported for now")
-		w.WriteHeader(400)
-		return
-	}
 	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		Subprotocols:       []string{model.WSSubprotocol},
 		InsecureSkipVerify: true,
@@ -50,12 +44,10 @@ func (s *shape3DServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	l := rate.NewLimiter(rate.Every(500*time.Millisecond), 2)
 	log.Println("websocket connection established")
-	s.shapeNotify = make(chan struct{})
-	s.busy = true
-	defer func() {
-		close(s.shapeNotify)
-		s.busy = false
-	}()
+
+	if s.shapeNotify == nil {
+		s.shapeNotify = make(chan struct{})
+	}
 	for range s.shapeNotify {
 		log.Println("got shapeNotify")
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
@@ -68,6 +60,7 @@ func (s *shape3DServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Printf("failed to echo with %v: %v\n", r.RemoteAddr, err)
 			return
 		}
+		time.Sleep(500 * time.Millisecond) // burst rate limiting
 	}
 }
 
@@ -115,11 +108,16 @@ func (t *shape3DServer) SetShape(data []render.Triangle3) {
 		Seq:       seq,
 	}
 	t.shape.SetContext(ctx)
-	select {
-	case t.shapeNotify <- struct{}{}: // This only works for one websocket connection... Must use muxes
-	default:
-		// websocket is not up or currently there is another request.
+busysend:
+	for {
+		select {
+		case t.shapeNotify <- struct{}{}:
+			// send until no more requests waiting.
+		default:
+			break busysend
+		}
 	}
+
 }
 
 func (t *shape3DServer) serveShapeHTTP(w http.ResponseWriter, r *http.Request) {
