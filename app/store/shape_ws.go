@@ -2,10 +2,10 @@ package store
 
 import (
 	"context"
-	"encoding/gob"
 	"fmt"
 	"net/http"
 	"time"
+	"vecty-templater-project/app/store/actions"
 	"vecty-templater-project/model"
 
 	"nhooyr.io/websocket"
@@ -74,13 +74,14 @@ func ForceUpdateShape() {
 			return
 		}
 		var gotShape model.Shape3D
-		err = gob.NewDecoder(resp.Body).Decode(&gotShape)
-		// err = json.NewDecoder(resp.Body).Decode(&gotShape)
+
+		err = gotShape.Decode(resp.Body)
 		if err != nil {
 			fmt.Println("error during shape decoding:", err)
 			return
 		}
 		SetShape(gotShape)
 		fmt.Println("shape update success. amount of triangles streamed:", len(shape.Triangles))
+		actions.Dispatch(&actions.Refresh{})
 	}()
 }

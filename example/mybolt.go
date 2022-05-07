@@ -13,8 +13,8 @@ func main() {
 	b, _ := obj3.Bolt(obj3.BoltParms{
 		Thread:      "npt_1/2",
 		Style:       obj3.CylinderHex,
-		TotalLength: 10,
-		ShankLength: 3,
+		TotalLength: 40,
+		ShankLength: 10,
 	})
 	err := uirender.EncodeRenderer(os.Stdout, render.NewOctreeRenderer(b, 200))
 	if err != nil {

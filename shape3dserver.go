@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/gob"
 	"log"
 	"net/http"
 	"sync"
@@ -22,11 +21,17 @@ type shape3DServer struct {
 	// becomes stale. It cancels the Shape3D's context.
 	staleFunc   func()
 	shapeNotify chan struct{}
+	busy        bool
 }
 
 // ServeHTTP is a basic websocket implementation for reading/writing a TODO list
 // from a websocket.
 func (s *shape3DServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if s.busy { // race condition, but oh well. move fast break things.
+		log.Println("attempted to register a second websocket. Only one browser window supported for now")
+		w.WriteHeader(400)
+		return
+	}
 	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		Subprotocols:       []string{model.WSSubprotocol},
 		InsecureSkipVerify: true,
@@ -46,7 +51,11 @@ func (s *shape3DServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	l := rate.NewLimiter(rate.Every(500*time.Millisecond), 2)
 	log.Println("websocket connection established")
 	s.shapeNotify = make(chan struct{})
-	defer close(s.shapeNotify)
+	s.busy = true
+	defer func() {
+		close(s.shapeNotify)
+		s.busy = false
+	}()
 	for range s.shapeNotify {
 		log.Println("got shapeNotify")
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
@@ -67,8 +76,8 @@ func (s *shape3DServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (t *shape3DServer) sendStatus(ctx context.Context, c *websocket.Conn, l *rate.Limiter) error {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	if t.shape.Ctx == nil {
-		t.shape.Ctx = ctx // temp workaround
+	if t.shape.Context().Err() != nil {
+		t.shape.SetContext(ctx) // temp workaround
 	}
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -76,7 +85,7 @@ func (t *shape3DServer) sendStatus(ctx context.Context, c *websocket.Conn, l *ra
 		// This goroutine cancels sendShape if shape becomes stale.
 		select {
 		case <-ctx.Done():
-		case <-t.shape.Ctx.Done():
+		case <-t.shape.Context().Done():
 		}
 		cancel()
 	}()
@@ -102,11 +111,10 @@ func (t *shape3DServer) SetShape(data []render.Triangle3) {
 	t.staleFunc = cancel
 	seq := t.shape.Seq + 1
 	t.shape = model.Shape3D{
-		Ctx:       ctx,
 		Triangles: data,
 		Seq:       seq,
 	}
-
+	t.shape.SetContext(ctx)
 	select {
 	case t.shapeNotify <- struct{}{}: // This only works for one websocket connection... Must use muxes
 	default:
@@ -121,8 +129,7 @@ func (t *shape3DServer) serveShapeHTTP(w http.ResponseWriter, r *http.Request) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	log.Println("encoding shape")
-	err := gob.NewEncoder(w).Encode(t.shape)
-	// err := json.NewEncoder(w).Encode(t.shape)
+	err := t.shape.Encode(w)
 	if err != nil {
 		log.Println("error encoding shape", err)
 		return

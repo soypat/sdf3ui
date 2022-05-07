@@ -23,7 +23,9 @@ func SetShape(s model.Shape3D) {
 	if shapeStaleFunc != nil {
 		shapeStaleFunc()
 	}
-	s.Ctx, shapeStaleFunc = context.WithCancel(context.Background())
+	var ctx context.Context
+	ctx, shapeStaleFunc = context.WithCancel(context.Background())
+	s.SetContext(ctx)
 	shape = s
 }
 
