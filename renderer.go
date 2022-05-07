@@ -1,18 +1,17 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"log"
 	"os/exec"
-	"reflect"
 	"sync"
 	"time"
-	"unsafe"
+	"vecty-templater-project/uirender"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/soypat/sdf/render"
 )
 
 type rendererHandler struct {
@@ -53,7 +52,7 @@ func (r *rendererHandler) Start(ctx context.Context) error {
 				if !ok {
 					return errors.New("watcher Events closed.")
 				}
-
+				log.Println("event received", event)
 				if event.Op&fsnotify.Write == fsnotify.Write && time.Since(lastCmd) > r.refreshPeriod {
 					lastCmd = time.Now()
 					log.Println("event:", event)
@@ -79,13 +78,10 @@ func (r *rendererHandler) renderFile(ctx context.Context, filename string) error
 	if err != nil {
 		return fmt.Errorf("%s\n%s", string(output), err.Error())
 	}
-	lenTri := len(output) / int(unsafe.Sizeof(render.Triangle3{}))
-	sli := reflect.SliceHeader{
-		Data: uintptr(unsafe.Pointer(&output[0])),
-		Len:  lenTri,
-		Cap:  lenTri,
+	triangles, err := uirender.DecodeAll(bytes.NewReader(output))
+	if err != nil {
+		return err
 	}
-	triSlice := *(*[]render.Triangle3)(unsafe.Pointer(&sli))
-	r.server.SetShape(triSlice)
+	r.server.SetShape(triangles)
 	return nil
 }

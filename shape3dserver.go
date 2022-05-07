@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/gob"
 	"log"
 	"net/http"
 	"sync"
@@ -20,7 +20,8 @@ type shape3DServer struct {
 	shape model.Shape3D
 	// staleFunc is a function that is called when shape
 	// becomes stale. It cancels the Shape3D's context.
-	staleFunc func()
+	staleFunc   func()
+	shapeNotify chan struct{}
 }
 
 // ServeHTTP is a basic websocket implementation for reading/writing a TODO list
@@ -44,7 +45,10 @@ func (s *shape3DServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	l := rate.NewLimiter(rate.Every(500*time.Millisecond), 2)
 	log.Println("websocket connection established")
-	for {
+	s.shapeNotify = make(chan struct{})
+	defer close(s.shapeNotify)
+	for range s.shapeNotify {
+		log.Println("got shapeNotify")
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 		err = s.sendStatus(ctx, c, l)
 		cancel()
@@ -102,6 +106,12 @@ func (t *shape3DServer) SetShape(data []render.Triangle3) {
 		Triangles: data,
 		Seq:       seq,
 	}
+
+	select {
+	case t.shapeNotify <- struct{}{}: // This only works for one websocket connection... Must use muxes
+	default:
+		// websocket is not up or currently there is another request.
+	}
 }
 
 func (t *shape3DServer) serveShapeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -111,7 +121,8 @@ func (t *shape3DServer) serveShapeHTTP(w http.ResponseWriter, r *http.Request) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	log.Println("encoding shape")
-	err := json.NewEncoder(w).Encode(t.shape)
+	err := gob.NewEncoder(w).Encode(t.shape)
+	// err := json.NewEncoder(w).Encode(t.shape)
 	if err != nil {
 		log.Println("error encoding shape", err)
 		return

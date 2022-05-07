@@ -1,14 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 
 	"vecty-templater-project/app/store"
 	"vecty-templater-project/app/store/actions"
-	"vecty-templater-project/model"
 
 	"vecty-templater-project/app/views"
 
@@ -27,8 +24,7 @@ func main() {
 	if err != nil {
 		Message = "three.js not found!"
 	}
-	updateShape()
-	go updateShape()
+	go store.WebsocketShapeListen()
 	// OnAction must be registered before any storage manipulation.
 	actions.Register(store.OnAction)
 
@@ -55,48 +51,6 @@ func addShapeListener() {
 			// Only render new shape on RefreshShape action.
 			return
 		}
-		updateShape()
+		store.ForceUpdateShape()
 	})
 }
-
-func updateShape() {
-	resp, err := http.Get(model.ShapeEndpoint)
-	if err != nil {
-		fmt.Println("getting new shape:", err)
-		return
-	}
-	var shape model.Shape3D
-	err = json.NewDecoder(resp.Body).Decode(shape)
-	if err != nil {
-		fmt.Println("decoding new shape:", err)
-		return
-	}
-
-	fmt.Println("updateShape success, got shape of size ", len(shape.Triangles))
-	store.SetShape(shape)
-	store.ServerReply = fmt.Sprintf("Shape sequence %d", shape.Seq)
-	actions.Dispatch(&actions.Refresh{})
-}
-
-// var wsConn *websocket.Conn
-
-// func initShapeWS() {
-// 	fmt.Println("init socket")
-// 	if wsConn != nil {
-// 		wsConn.Close(websocket.StatusAbnormalClosure, "client wanted to reinitialize")
-// 	}
-// 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
-// 	defer cancel()
-
-// 	c, _, err := websocket.Dial(ctx, "ws://localhost"+model.HTTPAddr+"/"+model.WSSubprotocol, &websocket.DialOptions{
-// 		Subprotocols: []string{model.WSSubprotocol},
-// 	})
-
-// 	if err != nil {
-// 		fmt.Println("websocket initialization failed:", err.Error())
-// 		return
-// 	}
-// 	c.SetReadLimit(model.MaxRenderSize)
-// 	wsConn = c
-// 	fmt.Println("initialized websocket succesfully")
-// }

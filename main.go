@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"log"
 	"net/http"
@@ -8,8 +9,6 @@ import (
 	"vecty-templater-project/model"
 
 	"github.com/soypat/gwasm"
-	"github.com/soypat/sdf/form3/obj3"
-	"github.com/soypat/sdf/render"
 )
 
 //go:generate go run ./assets/gen_assets.go
@@ -22,17 +21,15 @@ var (
 )
 
 func main() {
-	b, _ := obj3.Bolt(obj3.BoltParms{
-		Thread:      "npt_1/2",
-		Style:       obj3.CylinderHex,
-		TotalLength: 30,
-		ShankLength: 5,
-	})
-	t, err := render.RenderAll(render.NewOctreeRenderer(b, 200))
-	if err != nil {
+	if len(os.Args) != 2 {
+		log.Fatal("first and only argument must be file name of program")
+	}
+	filename := os.Args[1]
+	if _, err := os.Stat(filename); err != nil {
 		log.Fatal(err)
 	}
-	rendererServer.server.SetShape(t)
+	rendererServer.SetFileTarget(filename)
+	go rendererServer.Start(context.Background())
 	// Register http server for serving WASM and other resources.
 	wsm, err := gwasm.NewWASMHandler("app", nil)
 	if err != nil {
