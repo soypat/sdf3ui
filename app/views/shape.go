@@ -62,7 +62,7 @@ func (v *shape3d) init(wgl three.WebGLRenderer) {
 	// v.scene.Add(three.NewFog(*three.NewColorHex(0x050505), v.far/2, v.far))
 	// Camera.
 	// ISO view looking at origin.
-	v.camera = three.NewPerspectiveCamera(70, width/height, v.near, v.far)
+	v.camera = three.NewPerspectiveCamera(70, width/height, v.near, v.far/200)
 	v.camera.SetPosition(three.NewVector3(v.far/2, v.far/2, v.far/2))
 	v.camera.LookAt(three.NewVector3(0, 0, 0))
 
@@ -74,13 +74,9 @@ func (v *shape3d) init(wgl three.WebGLRenderer) {
 	wgl.Render(v.scene, v.camera)
 }
 
-const cameraMaxDistance = 16
-
 func (v *shape3d) animate(wgl three.WebGLRenderer) bool {
 	v.renderShape(wgl)
-	v.camera.SetFar(v.far)
 	v.controls.Update()
-	v.controls.SetMaxDistance(v.far / cameraMaxDistance)
 	wgl.Render(v.scene, v.camera)
 	return true
 }
@@ -100,6 +96,7 @@ func (v *shape3d) renderShape(wgl three.WebGLRenderer) {
 		fmt.Println("skipping render due to empty triangles")
 		return
 	}
+	defer v.setCamera()
 	v.renderedSeq = int(v.shape.Seq)
 	mesh, box := makeShapeMesh(v.shape.Triangles)
 	v.bb = box
@@ -109,19 +106,27 @@ func (v *shape3d) renderShape(wgl three.WebGLRenderer) {
 		v.scene.Remove(v.shapeMesh)
 		v.shapeMesh.Call("dispose") // does this free all memory?
 	}
-	size := bbSize(v.bb)
-	v.far = r3.Norm(size) * 16
-	center := bbCenter(v.bb)
-	// Move mesh to 0,0
-	mx, my, mz := mesh.GetPosition().Coords()
-	mesh.SetPosition(three.NewVector3(mx-center.X, my-center.Y, mz-center.Z))
-
-	v.camera.SetPosition(three.NewVector3(1.1*box.Max.X, 1.1*box.Max.Y, 1.1*box.Max.Z))
-	v.controls.SetTarget(three.NewVector3(center.X, center.Y, center.Z))
 
 	v.shapeMesh = mesh
 	v.scene.Add(v.shapeMesh)
 	fmt.Println("added new shape mesh")
+}
+
+func (v *shape3d) setCamera() {
+	size := bbSize(v.bb)
+	sizeNorm := r3.Norm(size)
+	center := bbCenter(v.bb)
+	far := 4 * sizeNorm
+	v.camera.SetFar(far)
+	v.camera.SetNear(sizeNorm / 1e3)
+	// ISO view looking at origin.
+	camPos := r3.Add(center, r3.Vec{X: sizeNorm, Y: sizeNorm, Z: sizeNorm})
+	v.camera.SetPosition(three.NewVector3(camPos.X, camPos.Y, camPos.Z))
+	v.camera.LookAt(three.NewVector3(center.X, center.Y, center.Z))
+	v.controls.SetTarget(three.NewVector3(center.X, center.Y, center.Z))
+	v.controls.SetMaxDistance(2 * sizeNorm)
+
+	v.camera.UpdateProjectionMatrix()
 }
 
 // minElem return a vector with the minimum components of two vectors.
@@ -211,6 +216,5 @@ func makePointMesh(t []render.Triangle3) (three.Points, r3.Box) {
 		Color: three.NewColor("red"),
 		Size:  .1,
 	}))
-	// mesh := three.NewMesh(geom, material)
 	return mesh, r3.Box{Min: min, Max: max}
 }
