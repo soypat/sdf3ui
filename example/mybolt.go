@@ -3,7 +3,8 @@ package main
 import (
 	"log"
 	"os"
-	"vecty-templater-project/uirender"
+
+	"github.com/soypat/sdf3ui/uirender"
 
 	"github.com/soypat/sdf/form3/obj3"
 	"github.com/soypat/sdf/render"

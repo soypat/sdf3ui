@@ -6,7 +6,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"vecty-templater-project/model"
+
+	"github.com/soypat/sdf3ui/model"
 
 	"github.com/soypat/gwasm"
 )

@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-	"vecty-templater-project/app/store/actions"
-	"vecty-templater-project/model"
+
+	"github.com/soypat/sdf3ui/app/store/actions"
+	"github.com/soypat/sdf3ui/model"
 
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"

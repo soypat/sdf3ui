@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"vecty-templater-project/app/store"
-	"vecty-templater-project/app/store/actions"
+	"github.com/soypat/sdf3ui/app/store"
+	"github.com/soypat/sdf3ui/app/store/actions"
 
-	"vecty-templater-project/app/views"
+	"github.com/soypat/sdf3ui/app/views"
 
 	"github.com/hexops/vecty"
 	"github.com/soypat/gwasm"

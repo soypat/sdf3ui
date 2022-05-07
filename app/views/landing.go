@@ -1,7 +1,7 @@
 package views
 
 import (
-	"vecty-templater-project/model"
+	"github.com/soypat/sdf3ui/model"
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"

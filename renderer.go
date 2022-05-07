@@ -9,7 +9,8 @@ import (
 	"os/exec"
 	"sync"
 	"time"
-	"vecty-templater-project/uirender"
+
+	"github.com/soypat/sdf3ui/uirender"
 
 	"github.com/fsnotify/fsnotify"
 )

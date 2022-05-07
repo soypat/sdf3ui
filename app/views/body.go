@@ -1,8 +1,8 @@
 package views
 
 import (
-	"vecty-templater-project/app/store"
-	"vecty-templater-project/app/store/actions"
+	"github.com/soypat/sdf3ui/app/store"
+	"github.com/soypat/sdf3ui/app/store/actions"
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"

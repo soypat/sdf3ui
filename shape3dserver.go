@@ -7,7 +7,8 @@ import (
 	"os"
 	"sync"
 	"time"
-	"vecty-templater-project/model"
+
+	"github.com/soypat/sdf3ui/model"
 
 	"github.com/soypat/sdf/render"
 	"golang.org/x/time/rate"

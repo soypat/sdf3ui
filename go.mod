@@ -1,4 +1,4 @@
-module vecty-templater-project
+module github.com/soypat/sdf3ui
 
 go 1.17
 

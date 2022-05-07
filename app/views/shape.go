@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"math"
 	"syscall/js"
-	"vecty-templater-project/app/store"
-	"vecty-templater-project/model"
+
+	"github.com/soypat/sdf3ui/app/store"
+	"github.com/soypat/sdf3ui/model"
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"

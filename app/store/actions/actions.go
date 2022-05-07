@@ -1,6 +1,6 @@
 package actions
 
-import "vecty-templater-project/model"
+import "github.com/soypat/sdf3ui/model"
 
 // Context contains all information to completely define a page layout.
 // It also has information on last page visited to enable the use of a "back" button.
