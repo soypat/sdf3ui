@@ -52,12 +52,8 @@ github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742/go.mod h1:bx2lN
 github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 h1:zYyBkD/k9seD2A7fsi6Oo2LfFZAehjjQMERAvZLEDnQ=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/soypat/gwasm v0.0.3/go.mod h1:E5X6KR00phzzQy857HYgcPpD0rOsc8FV28jf4W8V19k=
-github.com/soypat/gwasm v0.0.10 h1:Vd82HgAauMLG0f7WZTEmkTqyePgKzspV+lzz3GbDZpw=
-github.com/soypat/gwasm v0.0.10/go.mod h1:E5X6KR00phzzQy857HYgcPpD0rOsc8FV28jf4W8V19k=
-github.com/soypat/rebed v0.2.3 h1:J/rJoxQ7B9eLhXmGzSy81+cjrfknsnYQSFnoIwxTGWs=
-github.com/soypat/rebed v0.2.3/go.mod h1:tP1Sb7HyBNHG23LZGltBh1FL0pJOdNO1bT0EBqJOVyA=
-github.com/soypat/sdf v0.0.0-20220501183515-feb9cc57016f h1:OcGp2xNH2jUwDQWGguOROkERK8PQhz0mG8yNnvByQ4I=
-github.com/soypat/sdf v0.0.0-20220501183515-feb9cc57016f/go.mod h1:LBKSgjy/HPyFjQDV3hdSDa6j72jPAeUa6YbS2wjaMC0=
+github.com/soypat/gwasm v0.0.11 h1:4i7ohSIt/DE9P1thTH0RXERObNlkuiYplnGRPkj6O2c=
+github.com/soypat/gwasm v0.0.11/go.mod h1:E5X6KR00phzzQy857HYgcPpD0rOsc8FV28jf4W8V19k=
 github.com/soypat/sdf v0.0.0-20220507034430-c26521433a8b h1:D8ZhwUhERHFI/pNVNBus/NNv4BoUS6d/YLp2QLMAvN0=
 github.com/soypat/sdf v0.0.0-20220507034430-c26521433a8b/go.mod h1:MfHn36+SBj5kgWD6pBRSRnylwnmcXU+yRtlyvUt48NU=
 github.com/soypat/three v0.0.0-20220501183759-e2d2208ad9b5 h1:JyaeBGODhYhZa/Np9jdeZAlhioS38ZVCmgNDqgWycFE=
