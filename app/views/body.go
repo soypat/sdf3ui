@@ -1,6 +1,8 @@
 package views
 
 import (
+	"fmt"
+
 	"github.com/soypat/sdf3ui/app/store"
 	"github.com/soypat/sdf3ui/app/store/actions"
 
@@ -36,6 +38,10 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 					vecty.Markup(event.Click(b.downloadSTL)),
 					vecty.Text("Save STL in working directory"),
 				),
+				// elem.Button(
+				// 	vecty.Markup(event.Click(b.requestPIP)),
+				// 	vecty.Text("PIP (unsupported)"),
+				// ),
 			),
 			&Landing{
 				Shape: store.GetShape(),
@@ -69,4 +75,11 @@ func (b *Body) downloadSTL(*vecty.Event) {
 	}
 	store.SaveRemoteSTL(filename)
 	actions.Dispatch(&actions.DownloadShapeSTL{Shape: store.GetShape()})
+}
+
+func (b *Body) requestPIP(*vecty.Event) {
+	err := canvas.requestPIP()
+	if err != nil {
+		fmt.Println("requesting PIP:", err)
+	}
 }

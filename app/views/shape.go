@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"syscall/js"
+	"time"
 
 	"github.com/soypat/sdf3ui/app/store"
 	"github.com/soypat/sdf3ui/model"
@@ -21,12 +22,15 @@ type shape3d struct {
 
 	shape model.Shape3D
 	// Bounding box of shape
-	bb          r3.Box
-	shapeMesh   three.Mesh
-	camera      three.PerspectiveCamera
-	scene       three.Scene
-	controls    three.TrackballControls
-	renderedSeq int
+	bb            r3.Box
+	shapeMesh     three.Mesh
+	camera        three.PerspectiveCamera
+	scene         three.Scene
+	controls      three.TrackballControls
+	pip           PIPWindow
+	width, height float64
+	lastResize    time.Time
+	renderedSeq   int
 }
 
 func (v *shape3d) Render() vecty.ComponentOrHTML {
@@ -40,14 +44,14 @@ func (v *shape3d) Render() vecty.ComponentOrHTML {
 }
 
 func (v *shape3d) init(wgl three.WebGLRenderer) {
-	elem := wgl.DomElement()
-	js.Global().Set("webglel", elem)
-	width := elem.Get("width").Float()
-	height := elem.Get("height").Float()
 	pixelRatio := js.Global().Get("devicePixelRatio").Float()
 	wgl.SetPixelRatio(pixelRatio)
-	wgl.SetSize(width, height, true)
-	fmt.Println("webgl initialized with widthxheight", width, height)
+	v.pip.Elem = js.Global().Get("document") // wgl.DomElement()
+	v.pip.OnResize = func(width, height float64, e *vecty.Event) {
+		v.width = width
+		v.height = height
+	}
+	v.setSize(wgl)
 	v.scene = three.NewScene()
 	// Lights.  without lights everything will be dark!
 	dlight := three.NewDirectionalLight(three.NewColor("white"), 1)
@@ -61,7 +65,7 @@ func (v *shape3d) init(wgl three.WebGLRenderer) {
 
 	// Camera.
 	// ISO view looking at origin.
-	v.camera = three.NewPerspectiveCamera(70, width/height, 0.1, 2000)
+	v.camera = three.NewPerspectiveCamera(70, 4/3, 0.1, 2000)
 
 	// Controls.
 	v.controls = three.NewTrackballControls(v.camera, wgl.DomElement())
@@ -71,10 +75,29 @@ func (v *shape3d) init(wgl three.WebGLRenderer) {
 }
 
 func (v *shape3d) animate(wgl three.WebGLRenderer) bool {
+	v.setSize(wgl)
 	v.renderShape(wgl)
 	v.controls.Update()
 	wgl.Render(v.scene, v.camera)
 	return true
+}
+
+func (v *shape3d) setSize(wgl three.WebGLRenderer) {
+	if time.Since(v.lastResize) < time.Second {
+		return
+	}
+	elem := wgl.DomElement()
+	currentWidth := elem.Get("width").Float()
+	currentHeight := elem.Get("height").Float()
+	if currentWidth != v.width || currentHeight != v.height {
+		if v.width == 0 && v.height == 0 {
+			v.width = currentWidth
+			v.height = currentHeight
+		}
+		v.lastResize = time.Now()
+		wgl.SetSize(v.width, v.height, true)
+		fmt.Println("webgl initialized with widthxheight", v.width, v.height)
+	}
 }
 
 // SetShape sets the 3D shape.
@@ -177,7 +200,7 @@ func makeShapeMesh(t []render.Triangle3) (three.Mesh, r3.Box) {
 	geom.SetAttribute("normal", three.NewBufferAttribute(normals, 3))
 	geom.ComputeBoundingSphere()
 	material := three.NewMeshPhongMaterial(&three.MaterialParameters{
-		Color:    three.NewColor("purple"),
+		Color:    three.NewColor("chocolate"),
 		Specular: three.NewColor("gray"),
 		Side:     three.FrontSide,
 	})
@@ -215,4 +238,8 @@ func makePointMesh(t []render.Triangle3) (three.Points, r3.Box) {
 		Size:  .1,
 	}))
 	return mesh, r3.Box{Min: min, Max: max}
+}
+
+func (v *shape3d) requestPIP() error {
+	return v.pip.RequestPIP()
 }

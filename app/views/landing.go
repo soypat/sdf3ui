@@ -7,7 +7,9 @@ import (
 	"github.com/hexops/vecty/elem"
 )
 
-var canvas = &shape3d{}
+var (
+	canvas = &shape3d{}
+)
 
 type Landing struct {
 	vecty.Core
