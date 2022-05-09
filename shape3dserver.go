@@ -40,7 +40,7 @@ func (s *shape3DServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close(websocket.StatusInternalError, "the sky is falling")
 
-	c.SetReadLimit(model.MaxRenderSize)
+	c.SetReadLimit(model.WSReadLimit)
 	if c.Subprotocol() != model.WSSubprotocol {
 		c.Close(websocket.StatusPolicyViolation, "client must speak the "+model.WSSubprotocol+" subprotocol")
 		return
@@ -52,7 +52,6 @@ func (s *shape3DServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.shapeNotify = make(chan struct{})
 	}
 	for range s.shapeNotify {
-		log.Println("got shapeNotify")
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 		err = s.sendStatus(ctx, c, l)
 		cancel()
@@ -124,18 +123,16 @@ busysend:
 }
 
 func (t *shape3DServer) serveShapeHTTP(w http.ResponseWriter, r *http.Request) {
+	defer log.Printf("request to encode %s ended\n", t.shape.String())
 	w.Header().Add("Content-Type", "application/octet-stream")
 	w.WriteHeader(200)
-	log.Println("serveShapeHTTP request")
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	log.Println("encoding shape")
 	err := t.shape.Encode(w)
 	if err != nil {
-		log.Println("error encoding shape", err)
+		log.Printf("[ERR] encoding shape %s: %s", t.shape.String(), err)
 		return
 	}
-	log.Println("shape encode success")
 }
 
 func (t *shape3DServer) createSTLHandler(w http.ResponseWriter, req *http.Request) {

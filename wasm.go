@@ -45,7 +45,7 @@ func WASMHandler() (http.Handler, error) {
 		WASMApplication: wasmApp,
 		WASMExecContent: wasmexec,
 	}
-	wsm.SetOutput(os.Stdout)
+	// wsm.SetOutput(os.Stdout)
 	return &wsm, nil
 }
 

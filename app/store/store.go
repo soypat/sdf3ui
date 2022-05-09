@@ -54,12 +54,12 @@ func OnAction(action interface{}) {
 			defer w.Close()
 			err := render.WriteSTL(w, a.Shape.Triangles)
 			if err != nil {
-				fmt.Println("writing STL to stream:", err)
+				fmt.Println("error writing STL to stream:", err)
 			}
 		}()
 		err := gwasm.DownloadStream("shape.stl", "", r)
 		if err != nil {
-			fmt.Println("downloading STL:", err)
+			fmt.Println("error downloading STL:", err)
 		}
 	case *actions.Back:
 		Ctx = *Ctx.Referrer
@@ -68,7 +68,7 @@ func OnAction(action interface{}) {
 	default:
 		panic("unknown action selected!")
 	}
-	fmt.Printf("action %T", action)
+	// fmt.Printf("action %T", action)
 	Listeners.Fire(action)
 }
 

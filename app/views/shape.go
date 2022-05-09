@@ -128,11 +128,10 @@ func (v *shape3d) renderShape(wgl three.WebGLRenderer) {
 
 	v.shapeMesh = mesh
 	v.scene.Add(v.shapeMesh)
-	fmt.Println("added new shape mesh")
 }
 
 func (v *shape3d) setCamera() {
-	defer store.TimeIt("shape3d.setCamera")()
+	// defer store.TimeIt("shape3d.setCamera")() // this runs in negligible time.
 	size := bbSize(v.bb)
 	sizeNorm := r3.Norm(size)
 	center := bbCenter(v.bb)
@@ -194,7 +193,6 @@ func makeShapeMesh(t []render.Triangle3) (three.Mesh, r3.Box) {
 			normals[vertexIdx+2] = nz
 		}
 	}
-	fmt.Println("finished getting ", Nfaces, " faces")
 	geom := three.NewBufferGeometry()
 	geom.SetAttribute("position", three.NewBufferAttribute(vertices, 3))
 	geom.SetAttribute("normal", three.NewBufferAttribute(normals, 3))
@@ -228,7 +226,6 @@ func makePointMesh(t []render.Triangle3) (three.Points, r3.Box) {
 		vertices[vertexStart+7] = float32(face.V[2].Y)
 		vertices[vertexStart+8] = float32(face.V[2].Z)
 	}
-	fmt.Println("finished getting ", Nfaces, " faces")
 	geom := three.NewBufferGeometry()
 	geom.SetAttribute("position", three.NewBufferAttribute(vertices, 3))
 

@@ -3,6 +3,7 @@ package model
 import (
 	"context"
 	"encoding/gob"
+	"fmt"
 	"io"
 
 	"github.com/soypat/sdf/render"
@@ -16,8 +17,9 @@ const (
 	WSSubprotocol   = "sdf3ui"
 	ShapeEndpoint   = "/" + WSSubprotocol + "/getShape"
 	SaveSTLEndpoint = "/createSTL"
-	megabyte        = 1000 * 1000
-	MaxRenderSize   = 30 * megabyte
+	kilobyte        = 1000
+	megabyte        = 1000 * kilobyte
+	WSReadLimit     = 32 * kilobyte
 )
 
 // Shape3D contains 3D shape information.
@@ -30,6 +32,13 @@ type Shape3D struct {
 	Triangles []render.Triangle3
 	// Sequence number of shape.
 	Seq uint
+}
+
+func (s Shape3D) String() string {
+	if s.Context().Err() != nil {
+		return "stale shape"
+	}
+	return fmt.Sprintf("seq:%d, faces:%d", s.Seq, len(s.Triangles))
 }
 
 func (s *Shape3D) SetContext(ctx context.Context) {

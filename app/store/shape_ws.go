@@ -13,10 +13,13 @@ import (
 	"nhooyr.io/websocket/wsjson"
 )
 
-var wsConn *websocket.Conn
+var (
+	// prevent multiple requests from attempting to get shape at same time
+	gettingShape = false
+	wsConn       *websocket.Conn
+)
 
 func initShapeWS() error {
-	fmt.Println("init socket")
 	if wsConn != nil {
 		wsConn.Close(websocket.StatusAbnormalClosure, "client wanted to reinitialize")
 	}
@@ -28,12 +31,10 @@ func initShapeWS() error {
 	})
 
 	if err != nil {
-		fmt.Println("websocket initialization failed:", err.Error())
 		return err
 	}
-	c.SetReadLimit(model.MaxRenderSize)
+	c.SetReadLimit(model.WSReadLimit)
 	wsConn = c
-	fmt.Println("initialized websocket succesfully")
 	return nil
 }
 
@@ -44,9 +45,9 @@ func WebsocketShapeListen() {
 		if err == nil {
 			break
 		}
-		fmt.Println("websocket init failed. retry")
+		fmt.Println("websocket init failed. retry. ", err.Error())
 	}
-
+	fmt.Println("initialized websocket succesfully")
 	var stat model.ServerStatus
 	for {
 		ctx, cancel := context.WithTimeout(context.Background(), 400*time.Second)
@@ -57,6 +58,9 @@ func WebsocketShapeListen() {
 			initShapeWS()
 			continue
 		}
+		// if gettingShape {
+		// 	continue
+		// }
 		currentShape := GetShape()
 		if currentShape.Seq >= stat.ShapeSeq {
 			// shape is not stale, do nothing
@@ -68,7 +72,15 @@ func WebsocketShapeListen() {
 }
 
 func ForceUpdateShape() {
+	if gettingShape {
+		fmt.Println("cancel ForceUpdateShape. Shape already being fetched")
+		return
+	}
+	gettingShape = true
 	go func() {
+		defer func() {
+			gettingShape = false
+		}()
 		defer TimeIt("ForceUpdateShape")()
 		resp, err := http.Get(model.ShapeEndpoint)
 		if err != nil {
@@ -83,7 +95,8 @@ func ForceUpdateShape() {
 			return
 		}
 		SetShape(gotShape)
-		fmt.Println("shape update success. amount of triangles streamed:", len(shape.Triangles))
+
+		fmt.Println("Updated shape", shape.String())
 		actions.Dispatch(&actions.Refresh{})
 	}()
 }

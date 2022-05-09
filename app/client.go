@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/soypat/sdf3ui/app/store"
@@ -17,8 +16,6 @@ import (
 func main() {
 	Message := "Welcome!"
 	gwasm.AddScript("https://threejs.org/build/three.js", "THREE", 3*time.Second)
-
-	fmt.Println("if assets/js/trackball_controls.js fails to get please run `go generate` in sdf3ui base directory to generate assets")
 	gwasm.AddScript("assets/js/trackball_controls.js", "TrackballControls", time.Second)
 	err := three.Init()
 	if err != nil {

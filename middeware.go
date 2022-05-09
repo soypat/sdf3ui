@@ -25,7 +25,7 @@ func (rh *baseMiddleware) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	start := time.Now()
-	log.Printf("%s receive\n", r.URL.String())
+	// log.Printf("%s receive\n", r.URL.String())
 
 	rh.handler.ServeHTTP(rw, r)
 	log.Printf("%s elapsed %s \n", r.URL.String(), time.Since(start))
