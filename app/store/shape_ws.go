@@ -50,7 +50,7 @@ func WebsocketShapeListen() {
 	fmt.Println("initialized websocket succesfully")
 	var stat model.ServerStatus
 	for {
-		ctx, cancel := context.WithTimeout(context.Background(), 400*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), model.WSTimeout)
 		err := wsjson.Read(ctx, wsConn, &stat)
 		cancel()
 		if err != nil {

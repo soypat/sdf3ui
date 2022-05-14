@@ -51,7 +51,7 @@ func (v *shape3d) init(wgl three.WebGLRenderer) {
 		v.width = width
 		v.height = height
 	}
-	v.setSize(wgl)
+
 	v.scene = three.NewScene()
 	// Lights.  without lights everything will be dark!
 	dlight := three.NewDirectionalLight(three.NewColor("white"), 1)
@@ -86,17 +86,22 @@ func (v *shape3d) setSize(wgl three.WebGLRenderer) {
 	if time.Since(v.lastResize) < time.Second {
 		return
 	}
+	window := js.Global().Get("window")
 	elem := wgl.DomElement()
-	currentWidth := elem.Get("width").Float()
-	currentHeight := elem.Get("height").Float()
+
+	// set to window elem
+	elem = window
+	currentWidth := elem.Get("innerWidth").Float() - 30
+	currentHeight := elem.Get("innerHeight").Float() - 50
+
 	if currentWidth != v.width || currentHeight != v.height {
-		if v.width == 0 && v.height == 0 {
-			v.width = currentWidth
-			v.height = currentHeight
-		}
+		v.width = currentWidth
+		v.height = currentHeight
 		v.lastResize = time.Now()
 		wgl.SetSize(v.width, v.height, true)
-		fmt.Println("webgl initialized with widthxheight", v.width, v.height)
+		v.camera.SetAspect(v.width / v.height)
+		v.camera.UpdateProjectionMatrix()
+		fmt.Println("webgl sized with widthxheight", v.width, v.height)
 	}
 }
 
@@ -115,7 +120,7 @@ func (v *shape3d) renderShape(wgl three.WebGLRenderer) {
 		// fmt.Println("skipping render due to empty triangles")
 		return
 	}
-	defer v.setCamera()
+	defer v.setCamera(wgl)
 	v.renderedSeq = int(v.shape.Seq)
 	mesh, box := makeShapeMesh(v.shape.Triangles)
 	v.bb = box
@@ -130,21 +135,30 @@ func (v *shape3d) renderShape(wgl three.WebGLRenderer) {
 	v.scene.Add(v.shapeMesh)
 }
 
-func (v *shape3d) setCamera() {
+func (v *shape3d) setCamera(wgl three.WebGLRenderer) {
 	// defer store.TimeIt("shape3d.setCamera")() // this runs in negligible time.
+	currentPos := toR3(v.camera.GetPosition())
 	size := bbSize(v.bb)
 	sizeNorm := r3.Norm(size)
 	center := bbCenter(v.bb)
+
 	far := 4 * sizeNorm
 	v.camera.SetFar(far)
 	v.camera.SetNear(sizeNorm / 1e3)
-	// ISO view looking at origin.
-	camPos := r3.Add(center, r3.Vec{X: sizeNorm, Y: sizeNorm, Z: sizeNorm})
-	v.camera.SetPosition(three.NewVector3(camPos.X, camPos.Y, camPos.Z))
-	v.camera.LookAt(three.NewVector3(center.X, center.Y, center.Z))
-	v.controls.SetTarget(three.NewVector3(center.X, center.Y, center.Z))
-	v.controls.SetMaxDistance(2 * sizeNorm)
+	newPos := r3.Add(center, r3.Vec{X: sizeNorm, Y: sizeNorm, Z: sizeNorm})
+	newDist := r3.Norm(r3.Sub(newPos, center))
+	camDist := r3.Norm(r3.Sub(currentPos, center))
+	fmt.Println(newDist, sizeNorm, newDist/sizeNorm)
+	if currentPos.X == 0 || math.Abs(newDist-camDist)/sizeNorm > 1.5 {
+		fmt.Println("camera position reset")
+		// Scene has changed significantly, modify position.
+		// ISO view looking at origin.
+		v.camera.SetPosition(three.NewVector3(newPos.X, newPos.Y, newPos.Z))
+		v.camera.LookAt(three.NewVector3(center.X, center.Y, center.Z))
+		v.controls.SetTarget(three.NewVector3(center.X, center.Y, center.Z))
+	}
 
+	v.controls.SetMaxDistance(2 * sizeNorm)
 	v.camera.UpdateProjectionMatrix()
 }
 
@@ -181,12 +195,12 @@ func makeShapeMesh(t []render.Triangle3) (three.Mesh, r3.Box) {
 		ny := float32(n.Y)
 		nz := float32(n.Z)
 		for i := 0; i < 3; i++ {
-			min = minElem(min, face.V[i])
-			max = maxElem(max, face.V[i])
+			min = minElem(min, face[i])
+			max = maxElem(max, face[i])
 			vertexIdx := vertexStart + i*3
-			vertices[vertexIdx] = float32(face.V[i].X)
-			vertices[vertexIdx+1] = float32(face.V[i].Y)
-			vertices[vertexIdx+2] = float32(face.V[i].Z)
+			vertices[vertexIdx] = float32(face[i].X)
+			vertices[vertexIdx+1] = float32(face[i].Y)
+			vertices[vertexIdx+2] = float32(face[i].Z)
 
 			normals[vertexIdx] = nx
 			normals[vertexIdx+1] = ny
@@ -214,17 +228,17 @@ func makePointMesh(t []render.Triangle3) (three.Points, r3.Box) {
 	for iface, face := range t {
 		// vertices index of face.
 		vertexStart := iface * faceLen
-		vertices[vertexStart+0] = float32(face.V[0].X)
-		vertices[vertexStart+1] = float32(face.V[0].Y)
-		vertices[vertexStart+2] = float32(face.V[0].Z)
+		vertices[vertexStart+0] = float32(face[0].X)
+		vertices[vertexStart+1] = float32(face[0].Y)
+		vertices[vertexStart+2] = float32(face[0].Z)
 
-		vertices[vertexStart+3] = float32(face.V[1].X)
-		vertices[vertexStart+4] = float32(face.V[1].Y)
-		vertices[vertexStart+5] = float32(face.V[1].Z)
+		vertices[vertexStart+3] = float32(face[1].X)
+		vertices[vertexStart+4] = float32(face[1].Y)
+		vertices[vertexStart+5] = float32(face[1].Z)
 
-		vertices[vertexStart+6] = float32(face.V[2].X)
-		vertices[vertexStart+7] = float32(face.V[2].Y)
-		vertices[vertexStart+8] = float32(face.V[2].Z)
+		vertices[vertexStart+6] = float32(face[2].X)
+		vertices[vertexStart+7] = float32(face[2].Y)
+		vertices[vertexStart+8] = float32(face[2].Z)
 	}
 	geom := three.NewBufferGeometry()
 	geom.SetAttribute("position", three.NewBufferAttribute(vertices, 3))
@@ -239,4 +253,12 @@ func makePointMesh(t []render.Triangle3) (three.Points, r3.Box) {
 
 func (v *shape3d) requestPIP() error {
 	return v.pip.RequestPIP()
+}
+
+func toR3(v three.Vector3) r3.Vec {
+	return r3.Vec{
+		X: v.GetComponent(0),
+		Y: v.GetComponent(1),
+		Z: v.GetComponent(2),
+	}
 }

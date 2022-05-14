@@ -38,7 +38,6 @@ func (s *shape3DServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	defer c.Close(websocket.StatusInternalError, "the sky is falling")
 
 	c.SetReadLimit(model.WSReadLimit)
 	if c.Subprotocol() != model.WSSubprotocol {
@@ -52,14 +51,16 @@ func (s *shape3DServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.shapeNotify = make(chan struct{})
 	}
 	for range s.shapeNotify {
-		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		err = s.sendStatus(ctx, c, l)
 		cancel()
 		if websocket.CloseStatus(err) == websocket.StatusNormalClosure {
+			c.Close(websocket.StatusInternalError, "normal closure")
 			return
 		}
 		if err != nil {
-			log.Printf("failed to echo with %v: %v\n", r.RemoteAddr, err)
+			c.Close(websocket.StatusInternalError, err.Error())
+			log.Printf("failed to send status to %v: %v\n", r.RemoteAddr, err)
 			return
 		}
 		time.Sleep(500 * time.Millisecond) // burst rate limiting
@@ -81,6 +82,7 @@ func (t *shape3DServer) sendStatus(ctx context.Context, c *websocket.Conn, l *ra
 		select {
 		case <-ctx.Done():
 		case <-t.shape.Context().Done():
+			log.Println("shape became stale during status send")
 		}
 		cancel()
 	}()

@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/soypat/sdf/render"
 )
@@ -17,6 +18,7 @@ const (
 	WSSubprotocol   = "sdf3ui"
 	ShapeEndpoint   = "/" + WSSubprotocol + "/getShape"
 	SaveSTLEndpoint = "/createSTL"
+	WSTimeout       = 60 * time.Minute
 	kilobyte        = 1000
 	megabyte        = 1000 * kilobyte
 	WSReadLimit     = 32 * kilobyte

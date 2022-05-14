@@ -5,6 +5,7 @@ import (
 
 	"github.com/soypat/sdf3ui/app/store"
 	"github.com/soypat/sdf3ui/app/store/actions"
+	"github.com/soypat/three"
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
@@ -30,6 +31,10 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 			elem.Strong(vecty.Text(b.Info)),
 			elem.Div(
 				elem.Button(
+					vecty.Markup(event.Click(b.centerShape)),
+					vecty.Text("Center Shape"),
+				),
+				elem.Button(
 					vecty.Markup(event.Click(b.newItem)),
 					vecty.Text("Refresh Shape3D"),
 				),
@@ -38,6 +43,7 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 					vecty.Markup(event.Click(b.downloadSTL)),
 					vecty.Text("Save STL in working directory"),
 				),
+
 				// elem.Button(
 				// 	vecty.Markup(event.Click(b.requestPIP)),
 				// 	vecty.Text("PIP (unsupported)"),
@@ -75,6 +81,11 @@ func (b *Body) downloadSTL(*vecty.Event) {
 	}
 	store.SaveRemoteSTL(filename)
 	actions.Dispatch(&actions.DownloadShapeSTL{Shape: store.GetShape()})
+}
+
+func (b *Body) centerShape(*vecty.Event) {
+	v := bbCenter(canvas.bb)
+	canvas.controls.SetTarget(three.NewVector3(v.X, v.Y, v.Z))
 }
 
 func (b *Body) requestPIP(*vecty.Event) {

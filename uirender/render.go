@@ -1,10 +1,8 @@
 package uirender
 
 import (
-	"bytes"
+	"encoding/gob"
 	"io"
-	"reflect"
-	"unsafe"
 
 	"github.com/soypat/sdf/render"
 )
@@ -14,16 +12,7 @@ func EncodeRenderer(dst io.Writer, src render.Renderer) error {
 	if err != nil {
 		return err
 	}
-	Nt := len(t)
-	sizeTriangle := unsafe.Sizeof(render.Triangle3{})
-	slice := reflect.SliceHeader{
-		Data: uintptr(unsafe.Pointer(&t[0])),
-		Len:  Nt * int(sizeTriangle),
-		Cap:  Nt * int(sizeTriangle),
-	}
-	byteSlice := *(*[]byte)(unsafe.Pointer(&slice))
-	_, err = io.Copy(dst, bytes.NewReader(byteSlice))
-	return err
+	return gob.NewEncoder(dst).Encode(&t)
 }
 
 type Decoder struct {
@@ -32,26 +21,20 @@ type Decoder struct {
 }
 
 func DecodeAll(src io.Reader) ([]render.Triangle3, error) {
-	d := DecodeRenderer(src).(*Decoder)
-	return d.t, nil
-}
-func DecodeRenderer(src io.Reader) render.Renderer {
-	b, err := io.ReadAll(src)
+	d, err := DecodeRenderer(src)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	sizeTriangle := int(unsafe.Sizeof(render.Triangle3{}))
-	nt := len(b) / sizeTriangle
-	if len(b) != nt*sizeTriangle {
-		panic("bad result length Decoder")
+
+	return d.(*Decoder).t, nil
+}
+func DecodeRenderer(src io.Reader) (render.Renderer, error) {
+	var t []render.Triangle3
+	err := gob.NewDecoder(src).Decode(&t)
+	if err != nil {
+		return nil, err
 	}
-	slice := reflect.SliceHeader{
-		Data: uintptr(unsafe.Pointer(&b[0])),
-		Len:  nt,
-		Cap:  nt,
-	}
-	triSlice := *(*[]render.Triangle3)(unsafe.Pointer(&slice))
-	return &Decoder{t: triSlice}
+	return &Decoder{t: t}, nil
 }
 
 func (d *Decoder) ReadTriangles(dst []render.Triangle3) (nt int, err error) {
