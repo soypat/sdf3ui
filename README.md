@@ -50,3 +50,5 @@ If building from source run `go generate` to generate `assets` folder structure 
 
 To run app run `go run . example/mybolt.go` and head over to [http://localhost:8080](http://localhost:8080)
 
+### Related projects
+* [sdfx-ui](https://github.com/Yeicor/sdfx-ui) Real-time rendering using Faux-GL renderer for sdfx
