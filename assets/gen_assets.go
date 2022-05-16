@@ -85,7 +85,7 @@ func downloadFile(URL, fileName string) error {
 
 func generateWASM(dst string) error {
 	if _, err := os.Stat(dst); err == nil {
-		log.Println(dst + " already generated. finishing program")
+		log.Println(dst + " already generated. Delete file first to regenerate.")
 		return nil
 	}
 	log.Println("generating WASM")
