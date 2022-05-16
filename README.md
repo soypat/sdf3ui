@@ -1,5 +1,5 @@
 # sdf3ui
-Browser based 3D model visualizer for use with soypat/sdf package.
+Browser based 3D model visualizer for use with soypat/sdf package. 3 minute Youtube demo and tutorial [here](https://www.youtube.com/watch?v=t-N9gOMKupw&ab_channel=PatWhitti).
 
 #### Installation
 Before installing make sure your `GOBIN` environment variable is set to a folder in your PATH.
