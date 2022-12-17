@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/soypat/sdf3ui/model"
+	"gonum.org/v1/gonum/spatial/r3"
 
 	"github.com/soypat/sdf/render"
 	"golang.org/x/time/rate"
@@ -95,7 +96,7 @@ func (t *shape3DServer) sendStatus(ctx context.Context, c *websocket.Conn, l *ra
 
 // SetShape sets the render data and handles Shape3D context
 // and sequence number.
-func (t *shape3DServer) SetShape(name string, data []render.Triangle3) {
+func (t *shape3DServer) SetShape(name string, data []r3.Triangle) {
 	if t.staleFunc != nil {
 		t.staleFunc()
 	}

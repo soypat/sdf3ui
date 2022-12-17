@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/soypat/sdf/render"
+	"gonum.org/v1/gonum/spatial/r3"
 )
 
 func EncodeRenderer(dst io.Writer, src render.Renderer) error {
@@ -16,11 +17,11 @@ func EncodeRenderer(dst io.Writer, src render.Renderer) error {
 }
 
 type Decoder struct {
-	t []render.Triangle3
+	t []r3.Triangle
 	n int64
 }
 
-func DecodeAll(src io.Reader) ([]render.Triangle3, error) {
+func DecodeAll(src io.Reader) ([]r3.Triangle, error) {
 	d, err := DecodeRenderer(src)
 	if err != nil {
 		return nil, err
@@ -29,7 +30,7 @@ func DecodeAll(src io.Reader) ([]render.Triangle3, error) {
 	return d.(*Decoder).t, nil
 }
 func DecodeRenderer(src io.Reader) (render.Renderer, error) {
-	var t []render.Triangle3
+	var t []r3.Triangle
 	err := gob.NewDecoder(src).Decode(&t)
 	if err != nil {
 		return nil, err
@@ -37,7 +38,7 @@ func DecodeRenderer(src io.Reader) (render.Renderer, error) {
 	return &Decoder{t: t}, nil
 }
 
-func (d *Decoder) ReadTriangles(dst []render.Triangle3) (nt int, err error) {
+func (d *Decoder) ReadTriangles(dst []r3.Triangle) (nt int, err error) {
 	if d.n == int64(len(d.t)) {
 		return 0, io.EOF
 	}

@@ -11,7 +11,6 @@ import (
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	"github.com/soypat/sdf/render"
 	"github.com/soypat/three"
 	"github.com/soypat/three/vthree"
 	"gonum.org/v1/gonum/spatial/r3"
@@ -180,7 +179,7 @@ func bbCenter(bb r3.Box) r3.Vec {
 	return r3.Add(bb.Min, r3.Scale(0.5, bbSize(bb)))
 }
 
-func makeShapeMesh(t []render.Triangle3) (three.Mesh, r3.Box) {
+func makeShapeMesh(t []r3.Triangle) (three.Mesh, r3.Box) {
 	defer store.TimeIt("shape3D.makeShapeMesh")()
 	Nfaces := len(t)
 	const faceLen = 3 * 3
@@ -220,7 +219,7 @@ func makeShapeMesh(t []render.Triangle3) (three.Mesh, r3.Box) {
 	return mesh, r3.Box{Min: min, Max: max}
 }
 
-func makePointMesh(t []render.Triangle3) (three.Points, r3.Box) {
+func makePointMesh(t []r3.Triangle) (three.Points, r3.Box) {
 	Nfaces := len(t)
 	const faceLen = 3 * 3
 	vertices := make([]float32, Nfaces*faceLen)

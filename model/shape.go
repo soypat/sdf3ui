@@ -7,7 +7,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/soypat/sdf/render"
+	"gonum.org/v1/gonum/spatial/r3"
 )
 
 const (
@@ -31,7 +31,7 @@ type Shape3D struct {
 	// to be stale in this case.
 	ctx context.Context
 	// Triangles has render data.
-	Triangles []render.Triangle3
+	Triangles []r3.Triangle
 	// Sequence number of shape.
 	Seq uint
 }
