@@ -33,7 +33,7 @@ func main() {
 	object, _ = form3.Box(r3.Vec{4, 3, 2}, 1)
 	cone, _ := form3.Cone(6, 1, 0, .1)
 	union := sdf.Union3D(object, cone)
-	union.SetMin(sdf.MinPoly(.4))
+	union.SetMin(sdf.MinPoly(1, .4))
 	object = union
 	err := uirender.EncodeRenderer(os.Stdout, render.NewOctreeRenderer(object, 200))
 	if err != nil {
