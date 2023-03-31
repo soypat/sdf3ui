@@ -1,5 +1,5 @@
 # sdf3ui
-Browser based 3D model visualizer for use with soypat/sdf package. 3 minute Youtube demo and tutorial [here](https://www.youtube.com/watch?v=t-N9gOMKupw&ab_channel=PatWhitti).
+Browser based 3D model visualizer for use with [soypat/sdf](https://github.com/soypat/sdf) package. 3 minute Youtube demo and tutorial [here](https://www.youtube.com/watch?v=t-N9gOMKupw&ab_channel=PatWhitti).
 
 ![sdf3ui](https://user-images.githubusercontent.com/26156425/168592432-466dce19-6764-46a2-9218-3f49aed96dc2.gif)
 
