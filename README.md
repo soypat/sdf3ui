@@ -33,17 +33,16 @@ func main() {
 	object, _ = form3.Box(r3.Vec{4, 3, 2}, 1)
 	cone, _ := form3.Cone(6, 1, 0, .1)
 	union := sdf.Union3D(object, cone)
-	union.SetMin(sdf.MinPoly(1, .4))
+	union.SetMin(sdf.MinPoly(0, 0.1))
 	object = union
-	err := uirender.EncodeRenderer(os.Stdout, render.NewOctreeRenderer(object, 200))
+	err := uirender.EncodeRenderer(os.Stdout, render.NewOctreeRenderer(object, 500))
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 ```
 
-![example_screenshot](https://user-images.githubusercontent.com/26156425/167276444-7898f12f-ff25-403a-a0fd-af5e48b2ad21.png)
-
+![example_screenshot](https://user-images.githubusercontent.com/2787518/229315482-78868f81-3592-4383-a498-ed8032e84b52.png)
 
 ### Build from source
 If building from source run `go generate` to generate `assets` folder structure and contents.
