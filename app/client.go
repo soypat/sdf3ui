@@ -15,7 +15,7 @@ import (
 
 func main() {
 	Message := "Welcome!"
-	gwasm.AddScript("https://threejs.org/build/three.js", "THREE", 3*time.Second)
+	gwasm.AddScript("assets/js/three/three.js", "THREE", 3*time.Second)
 	gwasm.AddScript("assets/js/trackball_controls.js", "TrackballControls", time.Second)
 	err := three.Init()
 	if err != nil {
